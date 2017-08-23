@@ -6,3 +6,6 @@ Collection of scripts and subcommands designed to create a digital error profile
 Authors:
 
 * Brice Colbert
+* Sheena Todhunter
+* Steve Salipante
+* Adam Waalkes
