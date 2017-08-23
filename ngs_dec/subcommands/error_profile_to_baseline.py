@@ -23,7 +23,7 @@ def build_parser(parser):
 
 def process_input(error_model, output_file):
     ''' Turns the error_model and snp_input files into dataframes,
-    then calculates the p value for each. '''
+    then calculates alpha and beta values for each. '''
     error_df = pd.read_csv(error_model)
     error_df['alpha'] = error_df.apply(calculate_alpha_value,axis=1)
     error_df['beta'] = error_df.apply(calculate_beta_value,axis=1)

@@ -32,7 +32,7 @@ def action(args):
             for sub_item in os.listdir(item_dir):
                 # check if ends with variant_profile.csv
                 sub_item_path = os.path.join(item_dir, sub_item)
-                if os.path.isfile(sub_item_path) and sub_item.endswith('variant_profile.csv'):
+                if os.path.isfile(sub_item_path) and sub_item.endswith('variant_profile2.csv'):
                     vp_files.append(sub_item_path)
 
     # Turn into pandas dataframes and concatenate together
@@ -42,7 +42,7 @@ def action(args):
     for i in range(0, len(vp_files)):
         f = vp_files[i]
         df = pd.read_csv(f, dtype=dtype) # , dtype=dtype) #,dtype=dtype) #,names=header_vals)
-        df_list.append(df) 
+        df_list.append(df)
     
     master_df = pd.concat(df_list).reset_index()
 
