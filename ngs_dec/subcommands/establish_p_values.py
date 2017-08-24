@@ -51,9 +51,8 @@ def action(args):
         if len(record.ALT) == 1:
             row_dict['var_base'] = record.ALT[0]
         else:
-            print("Multiple variant bases...exiting")
-            ipdb.set_trace()
-            sys.exit(0)
+            print("Multiple variant bases...not supported - passing")
+            continue
         row_dict['ref_base'] = record.REF
         row_dict['var_freq_pct'] = call_data.FREQ
         row_dict['var_freq_flt'] = percent_to_float(call_data.FREQ)
@@ -71,40 +70,56 @@ def action(args):
 
     # do left join with sample_df as left
     #joined_df = sample_df.join(error_df, on='position_base', how='left', lsuffix='sample', rsuffix='error')
-    merged_df = sample_df.merge(error_df, on='position_base',how='left')
+    merged_df = sample_df.merge(error_df, on='position_base',how='inner')
 
-    # use beta distribution
-    merged_df['uw_dec_probability'] = merged_df.apply(calculate_p_value,axis=1)
-    merged_df['pdf'] = merged_df.apply(calculate_probability,axis=1)
-    merged_df['cdf'] = merged_df.apply(calculate_p_value,axis=1)
-    # prune merged_df down to just required columns, write output tab delimited
-    # generic chromosome start stop ref_base var_base uw_dec_p_value
+    # uw_dec_p_value calculated using beta distribution parameters
+    merged_df['uw_dec_p_value'] = merged_df.apply(calculate_p_value,axis=1)
+
+    # used in full output only
+    merged_df['pdf'] = merged_df.apply(calculate_pdf,axis=1)
+    merged_df['cdf'] = merged_df.apply(calculate_cdf,axis=1)
+
+
+    # drop rows with null results
+    final_df = merged_df[merged_df['uw_dec_p_value'].isnull()==False]
 
     # Write output file
     if full_output:
-        merged_df_to_full_output(merged_df, output_file)
+        merged_df_to_full_output(final_df, output_file)
     else:
-        merged_df_to_munge_ready_output(merged_df, output_file)
+        merged_df_to_munge_ready_output(final_df, output_file)
 
 def get_sample_position_base_key(row):
+    ''' Creates a position key consisting of the chromosome, position, and base'''
     return str(row['Chrom']) + ":" + str(row['Position']) + ":" + str(row['Var'])
 
 def get_error_position_base_key(row):
+    ''' Creates a position key consisting of the chromosome, position, and base'''
     return str(row['chrom']) + ":" + str(row['position']) + ":" + str(row['base'])
 
-def calculate_probability(row):
+def calculate_pdf(row):
+    ''' Calculates the probability density function given beta values.'''
     if row['var_freq_flt'] and row['alpha'] and row['beta']:
         return stats.beta.pdf(row['var_freq_flt'], row['alpha'], row['beta'])
     else:
         return None
 
-def calculate_p_value(row):
+def calculate_cdf(row):
+    ''' Calculates the cumulative density function given beta distribution parameters.'''
     if row['var_freq_flt'] and row['alpha'] and row['beta']:
         return stats.beta.cdf(row['var_freq_flt'], row['alpha'], row['beta'])
     else:
         return None
 
+def calculate_p_value(row):
+    """ Calculates the cdf and inverts it."""
+    if row['var_freq_flt'] and row['alpha'] and row['beta']:
+        return (1 - stats.beta.cdf(row['var_freq_flt'], row['alpha'], row['beta']))
+    else:
+        return None
+
 def percent_to_float(val):
+    '''turns a percentage to a float.'''
     return float(val.strip('%'))/100
 
 def merged_df_to_full_output(merged_df, output_file):
