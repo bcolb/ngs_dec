@@ -100,21 +100,30 @@ def get_error_position_base_key(row):
 def calculate_pdf(row):
     ''' Calculates the probability density function given beta values.'''
     if row['var_freq_flt'] and row['alpha'] and row['beta']:
-        return stats.beta.pdf(row['var_freq_flt'], row['alpha'], row['beta'])
+        var_freq_flt = row['var_freq_flt']
+        if var_freq_flt == 1.0:
+            var_freq_flt = var_freq_flt - 0.0001 #0.9999
+        return stats.beta.pdf(var_freq_flt, row['alpha'], row['beta'])
     else:
         return None
 
 def calculate_cdf(row):
     ''' Calculates the cumulative density function given beta distribution parameters.'''
     if row['var_freq_flt'] and row['alpha'] and row['beta']:
-        return stats.beta.cdf(row['var_freq_flt'], row['alpha'], row['beta'])
+        var_freq_flt = row['var_freq_flt']
+        if var_freq_flt == 1.0:
+            var_freq_flt = var_freq_flt - 0.0001 #0.9999
+        return stats.beta.cdf(var_freq_flt, row['alpha'], row['beta'])
     else:
         return None
 
 def calculate_p_value(row):
     """ Calculates the cdf and inverts it."""
     if row['var_freq_flt'] and row['alpha'] and row['beta']:
-        return (1 - stats.beta.cdf(row['var_freq_flt'], row['alpha'], row['beta']))
+        var_freq_flt = row['var_freq_flt']
+        if var_freq_flt == 1.0:
+            var_freq_flt = var_freq_flt - 0.0001 #0.9999
+        return (1 - stats.beta.cdf(var_freq_flt, row['alpha'], row['beta']))
     else:
         return None
 
@@ -133,6 +142,6 @@ def merged_df_to_munge_ready_output(merged_df, output_file):
     out_f = open(output_file, 'w')
     # loop through dataframe, write row to file
     for index, row in merged_df.iterrows():
-        line = "generic\t" + str(row['uw_dec_probability']) + "\t" + str(row['chrom']) + "\t" + str(row['position_x']) + "\t" + str(row['position_x']) + "\t" + str(row['ref_base']) + "\t" + str(row['var_base']) + "\n"
+        line = "generic\t" + str(row['uw_DEC_probability']) + "\t" + str(row['chrom']) + "\t" + str(row['position_x']) + "\t" + str(row['position_x']) + "\t" + str(row['ref_base']) + "\t" + str(row['var_base']) + "\n"
         out_f.write(line)
     out_f.close()
