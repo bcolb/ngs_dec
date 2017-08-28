@@ -6,7 +6,6 @@ and in turn calculates P-values for each variant.
 import logging
 import os
 import sys
-import ipdb
 import numpy as np
 import pandas as pd
 from scipy import stats
@@ -25,12 +24,14 @@ def build_parser(parser):
                         help="Output full merged data from error profile and variant file as csv")
 
 def action(args):
+    ''' Takes in arguments for sample_variants, error_baseline,
+    output_file and calculates P-values for variants.'''
     sample_variants = args.sample_variants
     error_baseline = args.error_baseline
     output_file = args.output_file
     full_output = args.full_output
     
-    # Check that files exist
+    # Check that required input files exist
     if not os.path.isfile(sample_variants):
         print("Sample variants file not found. Exiting.")
         sys.exit()
@@ -51,6 +52,7 @@ def action(args):
         if len(record.ALT) == 1:
             row_dict['var_base'] = record.ALT[0]
         else:
+            # May need to support this for indels/large deletions in future versions
             print("Multiple variant bases...not supported - passing")
             continue
         row_dict['ref_base'] = record.REF
@@ -63,13 +65,13 @@ def action(args):
 
     # create another dataframe from the error baseline
     dtype={'chrom':str,'position':int,'base':str,'mean':float,'std':float,'alpha':float,'beta':float}
-    #error_df = pd.DataFrame.from_csv(error_baseline, dtype=dtype)
+
+    # Read error_baseline file in from csv file
     error_df = pd.read_csv(error_baseline, dtype=dtype)
     error_df['position_base'] = error_df.apply(get_error_position_base_key,axis=1)
     error_df.set_index('position_base')
 
-    # do left join with sample_df as left
-    #joined_df = sample_df.join(error_df, on='position_base', how='left', lsuffix='sample', rsuffix='error')
+    # do inner join with sample_df on the common key position_base (ie chrom:position:base)
     merged_df = sample_df.merge(error_df, on='position_base',how='inner')
 
     # uw_dec_p_value calculated using beta distribution parameters
@@ -78,7 +80,6 @@ def action(args):
     # used in full output only
     merged_df['pdf'] = merged_df.apply(calculate_pdf,axis=1)
     merged_df['cdf'] = merged_df.apply(calculate_cdf,axis=1)
-
 
     # drop rows with null results
     final_df = merged_df[merged_df['uw_dec_p_value'].isnull()==False]
