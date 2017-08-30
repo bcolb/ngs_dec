@@ -143,6 +143,6 @@ def merged_df_to_munge_ready_output(merged_df, output_file):
     out_f = open(output_file, 'w')
     # loop through dataframe, write row to file
     for index, row in merged_df.iterrows():
-        line = "generic\t" + str(row['uw_DEC_probability']) + "\t" + str(row['chrom']) + "\t" + str(row['position_x']) + "\t" + str(row['position_x']) + "\t" + str(row['ref_base']) + "\t" + str(row['var_base']) + "\n"
+        line = "generic\t" + str(row['uw_dec_p_value']) + "\t" + str(row['chrom']) + "\t" + str(row['position_x']) + "\t" + str(row['position_x']) + "\t" + str(row['ref_base']) + "\t" + str(row['var_base']) + "\n"
         out_f.write(line)
     out_f.close()
