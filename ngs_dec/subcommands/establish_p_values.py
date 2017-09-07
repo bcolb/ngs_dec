@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 import vcf
+import math
 
 log = logging.getLogger(__name__)
 
@@ -72,7 +73,7 @@ def action(args):
     error_df.set_index('position_base')
 
     # do inner join with sample_df on the common key position_base (ie chrom:position:base)
-    merged_df = sample_df.merge(error_df, on='position_base',how='inner')
+    merged_df = sample_df.merge(error_df,on='position_base',how='inner')
 
     # uw_dec_p_value calculated using beta distribution parameters
     merged_df['uw_dec_p_value'] = merged_df.apply(calculate_p_value,axis=1)
@@ -123,8 +124,11 @@ def calculate_p_value(row):
     if row['var_freq_flt'] and row['alpha'] and row['beta']:
         var_freq_flt = row['var_freq_flt']
         if var_freq_flt == 1.0:
-            var_freq_flt = var_freq_flt - 0.0001 #0.9999
-        return (1 - stats.beta.cdf(var_freq_flt, row['alpha'], row['beta']))
+            var_freq_flt = var_freq_flt - 0.00001 #0.9999
+        result = (1 - stats.beta.cdf(var_freq_flt, row['alpha'], row['beta']))
+        if math.isnan(result):
+            result = -2
+        return result
     else:
         return None
 
