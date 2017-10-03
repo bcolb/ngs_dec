@@ -126,9 +126,20 @@ def calculate_p_value(row):
         if var_freq_flt == 1.0:
             var_freq_flt = var_freq_flt - 0.00001 #0.9999
         result = (1 - stats.beta.cdf(var_freq_flt, row['alpha'], row['beta']))
-        if math.isnan(result):
-            result = -2
+        if math.isnan(result) or result is None:
+            # Polymorphic sites in baseline get reported as -2 code
+            if row['alpha'] < 0 or row['bravo'] < 0:
+                result = -2
         return result
+    elif row['alpha'] == 0 and row['beta'] == 0:
+        # address edge cases for p-values of 1 and 0
+        var_freq_flt = row['var_freq_flt']
+        # if mean is 1 and var_freq_flt is 1 return p-value of 1 (is not real)
+        if row['mean'] == 1 and var_freq_flt == 1:
+            return 1
+        # if mean is 0 and var_freq_flt is nonzero return p-value of 0 (is real)
+        if row['mean'] == 0 and var_freq_flt > 0:
+            return 0
     else:
         return None
 
