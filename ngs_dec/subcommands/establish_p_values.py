@@ -127,10 +127,16 @@ def calculate_p_value(row):
             var_freq_flt = var_freq_flt - 0.00001 #0.9999
         result = (1 - stats.beta.cdf(var_freq_flt, row['alpha'], row['beta']))
         if math.isnan(result) or result is None:
-            # Polymorphic sites in baseline get reported as -2 code
-            if row['alpha'] < 0 or row['bravo'] < 0:
-                result = -2
+            # Means negative or NaN for alpha/bravo values
+            result = None
+            # Polymorphic sites (negative alpha/bravo values) in baseline get reported as -2 code
+            if not (math.isnan(row['alpha']) or math.isnan(row['beta'])):
+                # First condition checks that we have comparable values
+                if row['alpha'] < 0 or row['bravo'] < 0:
+                    # if negative values assume polymorphic site and return -2 code
+                    result = -2
         return result
+    # Address additional edge cases
     elif row['alpha'] == 0 and row['beta'] == 0:
         # address edge cases for p-values of 1 and 0
         var_freq_flt = row['var_freq_flt']
