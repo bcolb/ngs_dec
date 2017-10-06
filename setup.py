@@ -49,8 +49,8 @@ params = {'author': 'Your name',
           'setup_requires': 'numpy==1.13.1',
           'install_requires': [
               'pandas==0.20.3',
-              'numpy==1.13.1',
-              'scipy==0.19.1'],
+              'scipy==0.19.1',
+              'PyVCF==0.6.8'],
           'package_data': {'ngs_dec': package_data},
           'test_suite': 'tests',
           'cmdclass': {'check_version': CheckVersion}
